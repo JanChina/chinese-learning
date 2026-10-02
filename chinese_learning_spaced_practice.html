@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chinese Quiz">
+<title>Chinese Learning Quiz</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#171717;background:#f4f4f7}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;padding:env(safe-area-inset-top) 18px env(safe-area-inset-bottom);display:flex;justify-content:center}
+main{width:min(100%,560px);padding:20px 0 40px}
+h1{font-size:28px;margin:10px 0 4px;text-align:center}
+.sub{text-align:center;color:#666;margin:0 0 18px}
+.mode{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+button{font:inherit;border:0;border-radius:14px;padding:14px 10px;font-weight:650;cursor:pointer}
+.mode button{background:#fff;box-shadow:0 1px 4px #0001}
+.mode button.active{background:#171717;color:white}
+.card{background:white;border-radius:24px;padding:26px 20px;min-height:315px;box-shadow:0 5px 24px #00000012;display:flex;flex-direction:column;justify-content:center;text-align:center}
+.label{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:8px}
+.prompt{font-size:44px;font-weight:700;line-height:1.15;overflow-wrap:anywhere}
+.prompt.character{font-size:84px}
+.answer{margin-top:24px;padding-top:20px;border-top:1px solid #eee}
+.answer .line{font-size:25px;margin:9px 0}
+.answer .character{font-size:54px}
+.hidden{visibility:hidden}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.actions .wide{grid-column:1/-1;background:#171717;color:#fff;font-size:18px}
+.good{background:#e8f6eb}.bad{background:#fdeaea}
+.stats{display:flex;justify-content:space-between;color:#666;font-size:14px;margin:14px 3px 0}
+.small{background:transparent;color:#666;padding:8px}
+@media(max-width:390px){.mode button{font-size:13px;padding:12px 5px}.prompt{font-size:38px}.prompt.character{font-size:72px}}
+</style>
+</head>
+<body>
+<main>
+<h1>Chinese Learning</h1>
+<p class="sub">103 words from your Excel workbook</p>
+
+<div class="mode">
+<button id="pinyinMode">Pinyin first</button>
+<button id="charMode">Character first</button>
+<button id="meaningMode">Meaning first</button>
+</div>
+
+<section class="card">
+<div class="label" id="promptLabel"></div>
+<div id="prompt" class="prompt"></div>
+<div id="answer" class="answer hidden">
+  <div class="label">Answer</div>
+  <div id="answer1" class="line"></div>
+  <div id="answer2" class="line"></div>
+</div>
+</section>
+
+<div class="actions">
+<button id="reveal" class="wide">Show answer</button>
+<button id="wrong" class="bad">Again</button>
+<button id="correct" class="good">Correct</button>
+<button id="next" class="wide">Next random word</button>
+</div>
+
+<div class="stats">
+<span id="score">Correct 0 · Again 0</span>
+<button id="reset" class="small">Reset score</button>
+</div>
+</main>
+
+<script>
+const words = [{"pinyin": "ài", "character": "爱", "meaning": "love"}, {"pinyin": "bái", "character": "白", "meaning": "white"}, {"pinyin": "bǎi", "character": "百", "meaning": "hundred"}, {"pinyin": "běi", "character": "北", "meaning": "north"}, {"pinyin": "běn", "character": "本", "meaning": "root; book; measure word"}, {"pinyin": "bǐ", "character": "比", "meaning": "compare"}, {"pinyin": "biān", "character": "边", "meaning": "side; edge"}, {"pinyin": "bié", "character": "别", "meaning": "other; don't"}, {"pinyin": "bù", "character": "不", "meaning": "not"}, {"pinyin": "cháng", "character": "长 / 常", "meaning": "long / often"}, {"pinyin": "chī", "character": "吃", "meaning": "eat"}, {"pinyin": "chū", "character": "出", "meaning": "go out; emerge"}, {"pinyin": "dà", "character": "大", "meaning": "big"}, {"pinyin": "dào", "character": "到 / 道", "meaning": "arrive / way; path"}, {"pinyin": "de", "character": "的", "meaning": "possessive/descriptive particle"}, {"pinyin": "dé", "character": "得", "meaning": "obtain"}, {"pinyin": "dì", "character": "地 / 第", "meaning": "ground / ordinal marker"}, {"pinyin": "diǎn", "character": "点", "meaning": "point; a little; o'clock"}, {"pinyin": "dōng", "character": "东", "meaning": "east"}, {"pinyin": "dōu", "character": "都", "meaning": "all; both"}, {"pinyin": "duì", "character": "对", "meaning": "correct; toward; pair"}, {"pinyin": "duō", "character": "多", "meaning": "many; much"}, {"pinyin": "ér", "character": "儿 / 而", "meaning": "child / and; but"}, {"pinyin": "fā", "character": "发", "meaning": "send; issue; develop"}, {"pinyin": "fāng", "character": "方", "meaning": "direction; method"}, {"pinyin": "gāo", "character": "高", "meaning": "high; tall"}, {"pinyin": "gè", "character": "个", "meaning": "general measure word"}, {"pinyin": "gěi", "character": "给", "meaning": "give; for"}, {"pinyin": "gōng", "character": "工 / 公", "meaning": "work / public"}, {"pinyin": "hǎo", "character": "好", "meaning": "good"}, {"pinyin": "hěn", "character": "很", "meaning": "very"}, {"pinyin": "hòu", "character": "后", "meaning": "after; behind"}, {"pinyin": "huà", "character": "话 / 化", "meaning": "speech / transform"}, {"pinyin": "huì", "character": "会", "meaning": "can; meeting"}, {"pinyin": "jiā", "character": "家 / 加", "meaning": "home; family / add"}, {"pinyin": "jiān", "character": "间", "meaning": "between; room"}, {"pinyin": "jiàn", "character": "见 / 件", "meaning": "see / item; piece"}, {"pinyin": "jiāng", "character": "将", "meaning": "will; about to"}, {"pinyin": "jiào", "character": "叫 / 教", "meaning": "call / teach"}, {"pinyin": "jīn", "character": "今", "meaning": "today; present"}, {"pinyin": "jìn", "character": "进 / 近", "meaning": "enter / near"}, {"pinyin": "jiù", "character": "就 / 旧", "meaning": "then; just / old"}, {"pinyin": "kāi", "character": "开", "meaning": "open; start"}, {"pinyin": "kàn", "character": "看", "meaning": "look; watch"}, {"pinyin": "kě", "character": "可", "meaning": "can; possible"}, {"pinyin": "lái", "character": "来", "meaning": "come"}, {"pinyin": "lǎo", "character": "老", "meaning": "old"}, {"pinyin": "lǐ", "character": "里 / 理", "meaning": "inside / reason; principle"}, {"pinyin": "lì", "character": "力 / 利 / 立", "meaning": "strength / benefit / stand"}, {"pinyin": "liǎng", "character": "两", "meaning": "two"}, {"pinyin": "ma", "character": "吗", "meaning": "question particle"}, {"pinyin": "méi", "character": "没", "meaning": "not have; not"}, {"pinyin": "měi", "character": "美 / 每", "meaning": "beautiful / every"}, {"pinyin": "mén", "character": "门", "meaning": "door"}, {"pinyin": "men", "character": "们", "meaning": "plural suffix for people"}, {"pinyin": "míng", "character": "名 / 明", "meaning": "name / bright; clear"}, {"pinyin": "nà", "character": "那", "meaning": "that"}, {"pinyin": "nán", "character": "南 / 难", "meaning": "south / difficult"}, {"pinyin": "néng", "character": "能", "meaning": "can; ability"}, {"pinyin": "nǐ", "character": "你", "meaning": "you"}, {"pinyin": "nián", "character": "年", "meaning": "year"}, {"pinyin": "qǐ", "character": "起", "meaning": "rise; start"}, {"pinyin": "qián", "character": "前 / 钱", "meaning": "front; before / money"}, {"pinyin": "qǐng", "character": "请", "meaning": "please; invite"}, {"pinyin": "qù", "character": "去", "meaning": "go"}, {"pinyin": "rén", "character": "人", "meaning": "person"}, {"pinyin": "rì", "character": "日", "meaning": "sun; day"}, {"pinyin": "shàng", "character": "上", "meaning": "up; above; on"}, {"pinyin": "shǎo", "character": "少", "meaning": "few; little"}, {"pinyin": "shēng", "character": "生", "meaning": "life; be born"}, {"pinyin": "shí", "character": "时 / 十 / 实", "meaning": "time / ten / real"}, {"pinyin": "shì", "character": "是 / 事 / 市 / 世 / 室", "meaning": "be / matter / city-market / world / room"}, {"pinyin": "shuǐ", "character": "水", "meaning": "water"}, {"pinyin": "shuō", "character": "说", "meaning": "speak; say"}, {"pinyin": "tā", "character": "他 / 她 / 它", "meaning": "he / she / it"}, {"pinyin": "tiān", "character": "天", "meaning": "sky; day"}, {"pinyin": "wài", "character": "外", "meaning": "outside"}, {"pinyin": "wán", "character": "完", "meaning": "finish"}, {"pinyin": "wǎn", "character": "晚", "meaning": "late; evening"}, {"pinyin": "wèi", "character": "为 / 位", "meaning": "for; do / position; polite MW"}, {"pinyin": "wǒ", "character": "我", "meaning": "I; me"}, {"pinyin": "xià", "character": "下", "meaning": "down; below; next"}, {"pinyin": "xiān", "character": "先", "meaning": "first; before"}, {"pinyin": "xiǎng", "character": "想 / 响", "meaning": "think; want / sound"}, {"pinyin": "xiǎo", "character": "小", "meaning": "small"}, {"pinyin": "xīn", "character": "心 / 新", "meaning": "heart / new"}, {"pinyin": "xíng", "character": "行", "meaning": "go; okay; capable"}, {"pinyin": "xué", "character": "学", "meaning": "study; learn"}, {"pinyin": "yào", "character": "要", "meaning": "want; need"}, {"pinyin": "yě", "character": "也", "meaning": "also"}, {"pinyin": "yī", "character": "一 / 衣", "meaning": "one / clothing"}, {"pinyin": "yǐ", "character": "以", "meaning": "by; with; according to"}, {"pinyin": "yì", "character": "意 / 义 / 易 / 艺", "meaning": "meaning/intention / justice / easy-change / art"}, {"pinyin": "yǒu", "character": "有", "meaning": "have; exist"}, {"pinyin": "yòu", "character": "又 / 右", "meaning": "again / right"}, {"pinyin": "yú", "character": "于 / 鱼", "meaning": "at; in; to / fish"}, {"pinyin": "yuè", "character": "月", "meaning": "month; moon"}, {"pinyin": "zài", "character": "在 / 再", "meaning": "at; exist / again"}, {"pinyin": "zhè", "character": "这", "meaning": "this"}, {"pinyin": "zhī", "character": "知 / 只 / 支", "meaning": "know / only; one / support; measure word"}, {"pinyin": "zhōng", "character": "中", "meaning": "middle; China"}, {"pinyin": "zì", "character": "字 / 自", "meaning": "character; word / self"}, {"pinyin": "zuò", "character": "做 / 作 / 坐", "meaning": "do / make; work / sit"}];
+let mode = localStorage.getItem("quizMode") || "pinyin";
+let current = null;
+let previous = -1;
+let stats = JSON.parse(localStorage.getItem("quizStats") || '{"correct":0,"wrong":0}');
+let learning = JSON.parse(localStorage.getItem("quizLearning") || '{}');
+
+function wordKey(i){
+  const w = words[i];
+  return w.pinyin + "|" + w.character + "|" + w.meaning;
+}
+function stateFor(i){
+  const k = wordKey(i);
+  if(!learning[k]) learning[k] = {difficulty:0, correctStreak:0, again:0, correct:0};
+  return learning[k];
+}
+function saveLearning(){
+  localStorage.setItem("quizLearning", JSON.stringify(learning));
+}
+function weightFor(i){
+  const st = stateFor(i);
+  // New/easy words weight 1. Each Again raises priority substantially.
+  // Consecutive Correct answers gradually reduce that extra priority.
+  return 1 + Math.max(0, st.difficulty) * 3;
+}
+function weightedPick(){
+  let total = 0;
+  const weights = words.map((_,i) => {
+    let wt = weightFor(i);
+    if(i === previous && words.length > 1) wt = 0; // avoid immediate duplicate
+    total += wt;
+    return wt;
+  });
+  let r = Math.random() * total;
+  for(let i=0;i<weights.length;i++){
+    r -= weights[i];
+    if(r <= 0) return i;
+  }
+  return weights.findIndex(x => x > 0);
+}
+
+const $ = id => document.getElementById(id);
+function pick(){
+  current = words.length === 1 ? 0 : weightedPick();
+  previous = current;
+  render(false);
+}
+function fields(w){
+  if(mode==="pinyin") return ["Pinyin",w.pinyin,w.character,w.meaning,"character"];
+  if(mode==="character") return ["Character",w.character,w.pinyin,w.meaning,"character"];
+  return ["Meaning",w.meaning,w.character,w.pinyin,"meaning"];
+}
+function render(show){
+  const w=words[current], f=fields(w);
+  $("promptLabel").textContent=f[0];
+  $("prompt").textContent=f[1];
+  $("prompt").className="prompt "+(mode==="character"?"character":"");
+  $("answer1").textContent=f[2];
+  $("answer2").textContent=f[3];
+  $("answer1").className="line "+((mode==="pinyin"||mode==="meaning")?"character":"");
+  $("answer").classList.toggle("hidden",!show);
+  $("reveal").textContent=show?"Hide answer":"Show answer";
+  ["pinyinMode","charMode","meaningMode"].forEach(x=>$(x).classList.remove("active"));
+  $(mode==="pinyin"?"pinyinMode":mode==="character"?"charMode":"meaningMode").classList.add("active");
+  updateStats();
+}
+function updateStats(){
+  const difficult = Object.values(learning).filter(x => x.difficulty > 0).length;
+  $("score").textContent=`Correct ${stats.correct} · Again ${stats.wrong} · Difficult ${difficult}`;
+}
+function setMode(m){mode=m;localStorage.setItem("quizMode",m);pick();}
+$("pinyinMode").onclick=()=>setMode("pinyin");
+$("charMode").onclick=()=>setMode("character");
+$("meaningMode").onclick=()=>setMode("meaning");
+$("reveal").onclick=()=>render($("answer").classList.contains("hidden"));
+$("next").onclick=pick;
+$("correct").onclick=()=>{stats.correct++;localStorage.setItem("quizStats",JSON.stringify(stats));pick();}
+$("wrong").onclick=()=>{stats.wrong++;localStorage.setItem("quizStats",JSON.stringify(stats));render(true);}
+$("reset").onclick=()=>{stats={correct:0,wrong:0};localStorage.setItem("quizStats",JSON.stringify(stats));updateStats();}
+pick();
+</script>
+</body>
+</html>
